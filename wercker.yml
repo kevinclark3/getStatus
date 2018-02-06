@@ -1,0 +1,29 @@
+box:
+  id: python:2.7-slim
+  ports:
+    - "5000"
+
+dev:
+  steps:
+    # Use the following if behind Oracle VPN
+    # extra_args: --retries 1 --proxy http://www-proxy.us.oracle.com:80
+    - pip-install
+    - internal/watch:
+        code: python getStatus.py
+        reload: true
+        
+# Build definition
+build:
+  # The steps that will be executed on build
+  steps:
+    # A step that executes `pip install` command
+    # Use the following if behind Oracle VPN
+    # extra_args: --retries 1 --proxy http://www-proxy.us.oracle.com:80
+    - pip-install
+
+    # A custom script step, name value is used in the UI
+    # and the code value contains the command that get executed
+    - script:
+        name: python unit test
+        code: |
+          python getStatus.py
