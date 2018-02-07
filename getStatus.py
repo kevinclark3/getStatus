@@ -66,23 +66,23 @@ def getStatus():
 
   # Bitbucket Status
   #r = requests.get(repo1URL, timeout=5, proxies=proxyDict)
-  r = requests.get(repo1URL, timeout=5)
+  r1 = requests.get(repo1URL, timeout=5)
   found = 0 
-  textList = r.text.split("\n")
+  textList = r1.text.split("\n")
   # We are looking for a single instance of pattern
   pattern = 'All Systems Operational'
   for item in textList:
     if pattern in item:
       found = 1
       break
-  output += outputResults(repo1, repo1URL, r.status_code, found)
+  output += outputResults(repo1, repo1URL, r1.status_code, found)
 
   # GitHub Status 
   #r = requests.get(repo2URL, timeout=5, proxies=proxyDict)
-  r = requests.get(repo1URL, timeout=5)
+  r2 = requests.get(repo1URL, timeout=5)
   now = datetime.datetime.now()
   found = 0
-  textList = r.text.split("\n")
+  textList = r2.text.split("\n")
   # GitHub has two different success messages to look for...
   pattern1 = 'All systems reporting at 100'
   pattern2 = 'Everything operating normally.'
@@ -91,13 +91,13 @@ def getStatus():
     if currentDate in item and pattern1 in item or pattern2 in item:
       found = 1
       break
-  output += outputResults(repo2, repo2URL, r.status_code, found)
+  output += outputResults(repo2, repo2URL, r2.status_code, found)
  
   # GitLab Status 
   #r = requests.get(repo3URL, timeout=5, proxies=proxyDict)
-  r = requests.get(repo1URL, timeout=5)
+  r3 = requests.get(repo1URL, timeout=5)
   found = 0
-  textList = r.text.split("\n")
+  textList = r3.text.split("\n")
   # We are looking for four counts of both patterns
   pattern1 = 'label label-success'
   pattern2 = 'OK'
@@ -109,7 +109,7 @@ def getStatus():
     if count == expectCount:
       found = 1
       break
-  output += outputResults(repo3, repo3URL, r.status_code, found)
+  output += outputResults(repo3, repo3URL, r3.status_code, found)
 
   return output
 
