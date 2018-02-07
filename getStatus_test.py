@@ -7,6 +7,7 @@ class getStatusTestCase(unittest.TestCase):
     tester = app.test_client(self)
     response = tester.get('/status')
     text = response.data
+    print(text)
 
     pattern1  = '200'
     pattern2  = 'OPERATIONAL'
