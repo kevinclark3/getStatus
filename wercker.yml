@@ -26,4 +26,4 @@ build:
     - script:
         name: python unit test
         code: |
-          python getStatus.py
+          python getStatus_test.py
