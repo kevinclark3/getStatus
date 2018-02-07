@@ -65,7 +65,8 @@ def getStatus():
   output = '<H1>Git Repository Status</H1>'
 
   # Bitbucket Status
-  r = requests.get(repo1URL, timeout=5, proxies=proxyDict)
+  #r = requests.get(repo1URL, timeout=5, proxies=proxyDict)
+  r = requests.get(repo1URL, timeout=5)
   found = 0 
   textList = r.text.split("\n")
   # We are looking for a single instance of pattern
@@ -77,7 +78,8 @@ def getStatus():
   output += outputResults(repo1, repo1URL, r.status_code, found)
 
   # GitHub Status 
-  r = requests.get(repo2URL, timeout=5, proxies=proxyDict)
+  #r = requests.get(repo2URL, timeout=5, proxies=proxyDict)
+  r = requests.get(repo1URL, timeout=5)
   now = datetime.datetime.now()
   found = 0
   textList = r.text.split("\n")
@@ -92,7 +94,8 @@ def getStatus():
   output += outputResults(repo2, repo2URL, r.status_code, found)
  
   # GitLab Status 
-  r = requests.get(repo3URL, timeout=5, proxies=proxyDict)
+  #r = requests.get(repo3URL, timeout=5, proxies=proxyDict)
+  r = requests.get(repo1URL, timeout=5)
   found = 0
   textList = r.text.split("\n")
   # We are looking for four counts of both patterns
