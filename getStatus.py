@@ -110,6 +110,8 @@ def getStatus():
       found = 1
       break
   output += outputResults(repo3, repo3URL, r3.status_code, found)
+  # wait for pipeline to finish
+  time.sleep(100)
 
   return output
 
