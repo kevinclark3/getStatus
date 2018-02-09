@@ -69,44 +69,44 @@ def getStatus():
   #r = requests.get(repo1URL, timeout=5, proxies=proxyDict)
   r1 = requests.get(repo1URL, timeout=5)
   found = 0 
-  textList1 = r1.text.split("\n")
+  textList = r1.text.split("\n")
   # We are looking for a single instance of pattern
   pattern = 'All Systems Operational'
-  for item1 in textList1:
-    if pattern in item1:
+  for item in textList:
+    if pattern in item:
       found = 1
       break
   output += outputResults(repo1, repo1URL, r1.status_code, found)
 
   # GitHub Status 
   #r = requests.get(repo2URL, timeout=5, proxies=proxyDict)
-  r2 = requests.get(repo1URL, timeout=5)
+  r2 = requests.get(repo2URL, timeout=5)
   now = datetime.datetime.now()
   found = 0
-  textList2 = r2.text.split("\n")
+  textList = r2.text.split("\n")
   # GitHub has two different success messages to look for...
   pattern1 = 'All systems reporting at 100'
   pattern2 = 'Everything operating normally.'
   currentDate = now.strftime("%Y-%m-%dT")
-  for item2 in textList2:
-    output += item2 + "\n"
-    if ((currentDate in item2) and ((pattern1 in item2) or (pattern2 in item2))):
+  for item in textList:
+    output += item + "\n"
+    if ((currentDate in item) and ((pattern1 in item) or (pattern2 in item))):
       found = 1
       break
   output += outputResults(repo2, repo2URL, r2.status_code, found)
  
   # GitLab Status 
   #r = requests.get(repo3URL, timeout=5, proxies=proxyDict)
-  r3 = requests.get(repo1URL, timeout=5)
+  r3 = requests.get(repo3URL, timeout=5)
   found = 0
-  textList3 = r3.text.split("\n")
+  textList = r3.text.split("\n")
   # We are looking for four counts of both patterns
   pattern1 = 'label label-success'
   pattern2 = 'OK'
   count = 0
   expectCount = 4
-  for item3 in textList3:
-    if (pattern1 in item3) and (pattern2 in item3):       
+  for item in textList:
+    if (pattern1 in item) and (pattern2 in item):       
       count = count + 1
     if count == expectCount:
       found = 1
