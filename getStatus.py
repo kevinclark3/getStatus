@@ -89,6 +89,8 @@ def getStatus():
   pattern2 = 'Everything operating normally.'
   currentDate = now.strftime("%Y-%m-%dT")
   for item in textList:
+    if currentDate in item:
+      print "(FOUND: " + currentDate)
     if ((currentDate in item) and ((pattern1 in item) or (pattern2 in item))):
       found = 1
       break
