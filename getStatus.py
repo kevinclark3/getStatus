@@ -72,8 +72,8 @@ def getStatus():
   textList1 = r1.text.split("\n")
   # We are looking for a single instance of pattern
   pattern = 'All Systems Operational'
-  for item in textList1:
-    if pattern in item:
+  for item1 in textList1:
+    if pattern in item1:
       found = 1
       break
   output += outputResults(repo1, repo1URL, r1.status_code, found)
@@ -88,9 +88,9 @@ def getStatus():
   pattern1 = 'All systems reporting at 100'
   pattern2 = 'Everything operating normally.'
   currentDate = now.strftime("%Y-%m-%dT")
-  for item in textList2:
-    output += item + "\n"
-    if ((currentDate in item) and ((pattern1 in item) or (pattern2 in item))):
+  for item2 in textList2:
+    output += item2 + "\n"
+    if ((currentDate in item2) and ((pattern1 in item2) or (pattern2 in item2))):
       found = 1
       break
   output += outputResults(repo2, repo2URL, r2.status_code, found)
@@ -105,8 +105,8 @@ def getStatus():
   pattern2 = 'OK'
   count = 0
   expectCount = 4
-  for item in textList3:
-    if (pattern1 in item) and (pattern2 in item):       
+  for item3 in textList3:
+    if (pattern1 in item3) and (pattern2 in item3):       
       count = count + 1
     if count == expectCount:
       found = 1
