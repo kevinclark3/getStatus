@@ -111,8 +111,6 @@ def getStatus():
       found = 1
       break
   output += outputResults(repo3, repo3URL, r3.status_code, found)
-  # wait for pipeline to finish
-  time.sleep(100)
 
   return output
 
@@ -121,5 +119,5 @@ def getStatus():
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=True, threated=True)
+    app.run(host='0.0.0.0', port=port, debug=True, threaded=True)
 
