@@ -1,6 +1,8 @@
 import os
 import datetime
 from flask import Flask
+from flask import Response
+from flask import json
 import requests
 
 app = Flask(__name__)
@@ -40,76 +42,142 @@ def outputResults(name, uri, c, result):
   t += '================================================'
   return t;
 
+
+# ----------------------------------------------------------------
+# pushCachet
+# Helper function to automatically push repo status to Catchet
+
+def pushCachet(id, status):
+  
+  # Cachet Status Codes
+  # 1 - Operational
+  # 2 - Performance issues
+  # 3 - Partial Outage
+  # 4 - Major outage
+
+  cachetURL = "http://10.159.144.8"
+  fullURL   = cachetURL + "/api/v1/components/" + id
+
+  token = "WWOJ6kLnh7KnvAFr7atn"
+  headers = {
+    'Content-Type':'application/json', 
+    'X-Cachet-Token':token
+  } 
+  payload = {"status":str(status)}
+
+  print(fullURL)
+  print(payload)
+  print(headers)
+  response = requests.put(fullURL, data=json.dumps(payload), headers=headers)
+
+  return response.text;
+
+# ----------------------------------------------------------------
+# Parse Bitbucket
+
+def parseBitbucket(text):
+  pattern = 'All Systems Operational'
+  status = 4
+
+  textList = text.split("\n")
+  # We are looking for a single instance of pattern
+  for item in textList:
+    if pattern in item:
+      status = 1
+      break
+
+  return status;
+
+# ----------------------------------------------------------------
+# Parse GitHub
+
+def parseGitHub(text):
+  pattern1 = 'All systems reporting at 100'
+  pattern2 = 'Everything operating normally.'
+  status = 4
+
+  now = datetime.datetime.now()
+  textList = text.split("\n")
+  currentDate = now.strftime("%Y-%m-%dT")
+  for item in textList:
+    if ((currentDate in item) and ((pattern1 in item) or (pattern2 in item))):
+      status = 1
+      break
+
+  return status;
+
+# ----------------------------------------------------------------
+# Parse GitLab
+
+def parseGitLab(text):
+  pattern1 = 'label label-success'
+  pattern2 = 'OK'
+  count = 0
+  expectCount = 4
+  status = 4
+
+  textList = text.split("\n")
+  for item in textList:
+    if (pattern1 in item) and (pattern2 in item):
+      count = count + 1
+      status = 3
+    if count == expectCount:
+      status = 1
+      break
+
+  return status;
+
 # ----------------------------------------------------------------
 # Go get the status for each repository in turn
 
 @app.route('/status')
 def getStatus():
 
-  # Repository information
-  repo1    = 'Bitbucket'
-  repo1URL = 'https://status.bitbucket.org'
-  repo2    = 'GitHub'
-  repo2URL = 'https://status.github.com/messages'
-  repo3    = 'GitLab'
-  repo3URL = 'https://status.gitlab.com'
-
   # Set up the proxy
-  http_proxy='http://www-proxy.us.oracle.com'
-  https_proxy='http://www-proxy.us.oracle.com'
+  http_proxy='http://www-proxy-hqdc.us.oracle.com:80'
+  https_proxy=http_proxy
   proxyDict = {
                      "http" : http_proxy,
                      "https" : https_proxy
               }
 
   output = '<H1>Git Repository Status</H1>'
-
-  # Bitbucket Status
-  #r = requests.get(repo1URL, timeout=5, proxies=proxyDict)
-  r1 = requests.get(repo1URL, timeout=5)
-  found = 0 
-  textList = r1.text.split("\n")
-  # We are looking for a single instance of pattern
-  pattern = 'All Systems Operational'
-  for item in textList:
-    if pattern in item:
-      found = 1
-      break
-  output += outputResults(repo1, repo1URL, r1.status_code, found)
-
-  # GitHub Status 
-  #r = requests.get(repo2URL, timeout=5, proxies=proxyDict)
-  r2 = requests.get(repo2URL, timeout=5)
-  now = datetime.datetime.now()
-  found = 0
-  textList = r2.text.split("\n")
-  # GitHub has two different success messages to look for...
-  pattern1 = 'All systems reporting at 100'
-  pattern2 = 'Everything operating normally.'
-  currentDate = now.strftime("%Y-%m-%dT")
-  for item in textList:
-    if ((currentDate in item) and ((pattern1 in item) or (pattern2 in item))):
-      found = 1
-      break
-  output += outputResults(repo2, repo2URL, r2.status_code, found)
  
-  # GitLab Status 
-  #r = requests.get(repo3URL, timeout=5, proxies=proxyDict)
-  r3 = requests.get(repo3URL, timeout=5)
-  found = 0
-  textList = r3.text.split("\n")
-  # We are looking for four counts of both patterns
-  pattern1 = 'label label-success'
-  pattern2 = 'OK'
-  count = 0
-  expectCount = 4
-  for item in textList:
-    if (pattern1 in item) and (pattern2 in item):       
-      count = count + 1
-    if count == expectCount:
-      found = 1
-      break
-  output += outputResults(repo3, repo3URL, r3.status_code, found)
+  #################################################### 
+  # Scan the properties file
+  propFile = "/scratch/kdclark/work/getStatus/properties.txt"
+  
+  with open(propFile) as pf:
+    line = pf.readline()
+    while line:
+      # Strip out the newline
+      line,junk = line.split('\n')
+      repoName,repoURL,repoID = line.split("::")
+
+      #r = requests.get(repoURL, timeout=5, proxies=proxyDict)
+      r  = requests.get(repoURL, timeout=5)
+
+      # Parse the requests
+      if repoName == "Bitbucket":
+        status = parseBitbucket(r.text)
+      if repoName == "GitHub":
+        status = parseGitHub(r.text)
+      if repoName == "GitLab":
+        status = parseGitLab(r.text)
+
+      # Output results
+      #output += outputResults(repoName, repoURL, r.status_code, status)
+      
+      output += repoName + ": " + str(status) + "<BR>"
+
+      # Push results to Cachet
+      returnCode = pushCachet(repoID, status)
+    
+      output += "Result of pushing to Cachet: " + str(returnCode) + "<BR>"
+ 
+      line = pf.readline()
+      # End while loop
+  #####################################################
 
   return output
 

@@ -1,0 +1,3 @@
+GitHub::https://status.github.com/messages::4
+GitLab::https://status.gitlab.com::5
+Bitbucket::https://status.bitbucket.org::6
