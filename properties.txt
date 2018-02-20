@@ -1,3 +1,11 @@
-GitHub::https://status.github.com/messages::4
-GitLab::https://status.gitlab.com::5
-Bitbucket::https://status.bitbucket.org::6
+#
+# Environment variables
+#
+CACHET_URL::129.213.45.66
+CACHET_TOKEN::ZbQfhwXQXeXNZB23hMTg
+#
+# Repository Information
+#
+GitHub::https://status.github.com/messages::3
+GitLab::https://status.gitlab.com::2
+Bitbucket::https://status.bitbucket.org::1

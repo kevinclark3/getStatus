@@ -1,9 +1,7 @@
-import os
-import datetime
+import sys, os, datetime, requests
 from flask import Flask
 from flask import Response
 from flask import json
-import requests
 
 app = Flask(__name__)
 
@@ -47,7 +45,7 @@ def outputResults(name, uri, c, result):
 # pushCachet
 # Helper function to automatically push repo status to Catchet
 
-def pushCachet(id, status):
+def pushCachet(id, name, status, url, token):
   
   # Cachet Status Codes
   # 1 - Operational
@@ -55,20 +53,17 @@ def pushCachet(id, status):
   # 3 - Partial Outage
   # 4 - Major outage
 
-  cachetURL = "http://10.159.144.8"
-  fullURL   = cachetURL + "/api/v1/components/" + id
-
-  token = "WWOJ6kLnh7KnvAFr7atn"
+  cachetURL = "http://" + url + "/api/v1/components/" + id
   headers = {
     'Content-Type':'application/json', 
     'X-Cachet-Token':token
   } 
-  payload = {"status":str(status)}
+  payload = {"name":name,"status":str(status)}
 
-  print(fullURL)
+  #print(cachetURL)
   print(payload)
-  print(headers)
-  response = requests.put(fullURL, data=json.dumps(payload), headers=headers)
+  #print(headers)
+  response = requests.put(cachetURL, data=json.dumps(payload), headers=headers)
 
   return response.text;
 
@@ -144,38 +139,57 @@ def getStatus():
   output = '<H1>Git Repository Status</H1>'
  
   #################################################### 
+  # Environment variables
+  propFile = "properties.txt"
+  line = 1
+
+  # Get the path to the properties file
+  propFile = os.path.dirname(os.path.abspath(sys.argv[0])) + "/" + propFile
+  if not os.path.exists(propFile):
+    raise IOException("Can't find file:  " + propFile)
+
   # Scan the properties file
-  propFile = "/scratch/kdclark/work/getStatus/properties.txt"
-  
   with open(propFile) as pf:
     line = pf.readline()
     while line:
       # Strip out the newline
       line,junk = line.split('\n')
-      repoName,repoURL,repoID = line.split("::")
 
-      #r = requests.get(repoURL, timeout=5, proxies=proxyDict)
-      r  = requests.get(repoURL, timeout=5)
-
-      # Parse the requests
-      if repoName == "Bitbucket":
-        status = parseBitbucket(r.text)
-      if repoName == "GitHub":
-        status = parseGitHub(r.text)
-      if repoName == "GitLab":
-        status = parseGitLab(r.text)
-
-      # Output results
-      #output += outputResults(repoName, repoURL, r.status_code, status)
-      
-      output += repoName + ": " + str(status) + "<BR>"
-
-      # Push results to Cachet
-      returnCode = pushCachet(repoID, status)
-    
-      output += "Result of pushing to Cachet: " + str(returnCode) + "<BR>"
+      # Ignore comments
+      if "#" in line:
+        line = line
  
-      line = pf.readline()
+      # Capture any environmental variables
+      elif "CACHET_URL" in line:
+        junk,cachetURL = line.split("::")
+        print("Setting URL to " + cachetURL)
+      elif "CACHET_TOKEN" in line: 
+        junk,cachetToken = line.split("::")
+        print("Setting token to " + cachetToken)
+
+      # Send request and get repository status
+      else:
+        repoName,repoURL,repoID = line.split("::")
+        #r = requests.get(repoURL, timeout=5, proxies=proxyDict)
+        r  = requests.get(repoURL, timeout=5)
+
+        # Call a function to parse the information returned from the 
+        # repoName status page.
+        # 
+        # IN FUTURE:  If new repos are added, just create a new function
+        # called:  parseXX -- where XX is the name of the repo.
+        cmd = "parse" + repoName + "(r.text)"
+        status = eval(cmd)
+
+        # Output results
+        #output += outputResults(repoName, repoURL, r.status_code, status)
+        output += "Updating " + repoName + " to status: " + str(status) + "<BR>"
+
+        # Push results to Cachet
+        resp = pushCachet(repoID, repoName, status, cachetURL, cachetToken)
+        output += "Cachet: " + str(resp) + "<BR>"
+
+      line = pf.readline() 
       # End while loop
   #####################################################
 
